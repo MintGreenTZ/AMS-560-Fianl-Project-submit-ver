@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NYC Airbnb Visualization</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+</head>
+<style>
+    body {
+        background-color:#fff;
+    }
+    text{
+        fill:black;
+    }
+    .tick line,path{
+        stroke: black;
+    }
+
+    .background path {
+        fill: none;
+        stroke: #ddd;
+        stroke-opacity: .4;
+        shape-rendering: crispEdges;
+    }
+
+    .foreground path {
+        fill: none;
+        stroke-opacity: .7;
+    }
+
+    .brush .extent {
+        fill-opacity: .3;
+        stroke: #fff;
+        shape-rendering: crispEdges;
+    }
+
+    .axis line,
+    .axis path {
+        fill: none;
+        /* stroke: #000; */
+        stroke:black;
+        shape-rendering: crispEdges;
+    }
+
+    .axis text {
+        /* text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff; */
+        cursor: move;
+    }
+
+    .axis .axis-label {
+        font-size: 11px;
+    }
+
+    .frame {
+        fill: none;
+        stroke: #aaa;
+    }
+
+
+    .axis,
+    .frame {
+        shape-rendering: crispEdges;
+    }
+
+    .axis line {
+        stroke: #ddd;
+    }
+
+    .axis path {
+        display: none;
+    }
+
+    .cell text {
+        font-weight: bold;
+        text-transform: capitalize;
+        fill: black;
+    }
+
+    .frame {
+        fill: none;
+        stroke: #aaa;
+    }
+
+    circle {
+        fill-opacity: .7;
+    }
+
+    circle.hidden {
+        fill: #ccc !important;
+    }
+
+    .extent {
+        fill: #000;
+        fill-opacity: .125;
+        stroke: #fff;
+    }
+
+    .boroughs {
+        fill: #ccc;
+        stroke: #000;
+        stroke-width: 0.5px;
+    }
+
+    .tooltip {
+        position: absolute;
+        font-size: 12px;
+        width: auto;
+        height: auto;
+        pointer-events: none;
+        background-color: black;
+    }
+
+    .circle-hover {
+        stroke: #000;
+        stroke-width: 1px;
+    }
+
+    .brushed {
+        stroke: black;
+        stroke-width: 0.5;
+        opacity: 0.95;
+
+    }
+
+    .non_brushed {
+
+        fill: grey;
+        opacity: 0.15;
+
+    }
+    body::-webkit-scrollbar{
+        display: none;
+    }
+
+    .navbar {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 55px;
+    }
+    .navbar-title {
+        font-weight: bold;
+        color: white;
+        position: absolute;
+        font-size: 24px;
+        font-family: 'Times New Roman', Times, serif;
+    }
+
+</style>
+<body>
+
+    <nav class="navbar navbar-dark bg-dark" style="padding-top: 0 !important; padding-bottom: 0 !important;">
+        <span class="navbar-text navbar-title" style="font-weight:bold; color:white">
+            New York City Airbnb Data Analysis Dashboard (Mar 2022 - Mar 2023)
+        </span>
+    </nav>
+
+    <div class="row">
+        <div class="col-lg-3" id="map" style="border: 1px solid grey;"></div>
+        <div class="col-lg-9" id="PCP" style="border: 1px solid grey;"></div>
+    </div>
+    <div class="row">
+        <div class="col-lg-3" id="scatterplot" style="border: 1px solid grey;"></div>
+        <div class="col-lg-3" id="histogram" style="border: 1px solid grey;"></div>
+        <div class="col-lg-3" id="biplot" style="border: 1px solid grey;"></div>
+        <div class="col-lg-3" id="screeplot" style="border: 1px solid grey;"></div>
+    </div>
+
+<script src="http://d3js.org/d3.v4.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+        crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+        crossorigin="anonymous"></script>
+<script src="{{ url_for('static', filename='histogram.js') }}"></script>
+<script src="{{ url_for('static', filename='scatterplot.js') }}"></script>
+<script src="{{ url_for('static', filename='biplot.js') }}"></script>
+<script src="{{ url_for('static', filename='parallelcoordinates.js') }}"></script>
+<script src="{{ url_for('static', filename='map.js') }}"></script>
+<script src="{{ url_for('static', filename='index.js') }}"></script>
+<script src="{{ url_for('static', filename='screeplot.js') }}"></script>
+<!--<select id="selectButton" style="position: relative; top: 100px;"></select>-->
+
+</body>
+</html>
